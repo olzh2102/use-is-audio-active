@@ -15,22 +15,32 @@ npm install --save use-is-audio-active
 ```tsx
 import * as React from 'react'
 
-import { useMyHook } from 'use-is-audio-active'
+import useIsAudioActive from 'use-is-audio-active'
+
+
 
 const Example = () => {
-  const example = useMyHook()
+  const [stream, setStream] = React.useState(null)
+  const isActive = useIsAudioActive({ source: stream });
+
+  React.useEffect(() => {
+    (async function createStream() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      setStream(stream)
+    })()
+  }, [])  
+  
   return (
-    <div>
-      {example}
-    </div>
+    <p>
+      Am I speaking: {' '} { isActive ? 'yes, you are 🕺' : "seems like ain't 🦻" }
+    </p>
   )
 }
 ```
 
 ## License
 
-MIT © [olzh2102](https://github.com/olzh2102)
-
----
-
-This hook is created using [create-react-hook](https://github.com/hermanya/create-react-hook).
+MIT © [olzh2102](https://github.com/olzh2102) [evitla](https://github.com/evitla)
