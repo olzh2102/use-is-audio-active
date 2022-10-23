@@ -1,23 +1,62 @@
-import * as React from 'react';
+import { useState, useEffect } from "react";
 
-export const useMyHook = () => {
-  let [{
-    counter
-  }, setState] = React.useState<{
-    counter: number;
-  }>({
-    counter: 0
-  });
+export default function useIsAudioActive({
+  source,
+  fftSize = 1024,
+}: UseIsAudioActive) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
-  React.useEffect(() => {
-    let interval = window.setInterval(() => {
-      counter++;
-      setState({counter})
-    }, 1000)
+  useEffect(() => {
+    if (!source) return;
+
+    const audioContext = new AudioContext();
+    const analyser = new AnalyserNode(audioContext, { fftSize });
+
+    const audioSource = audioContext.createMediaStreamSource(source);
+    // * connect your source to output (usually laptop's mic)
+    audioSource.connect(analyser);
+
+    // * buffer length gives us how many different frequencies we are going to be measuring
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    update();
+
+    function update() {
+      analyser.getByteTimeDomainData(dataArray);
+
+      const sum = dataArray.reduce((a, b) => a + b, 0);
+
+      if (sum / dataArray.length / 128.0 >= 1) {
+        setIsSpeaking(true);
+        setTimeout(() => setIsSpeaking(false), 1000);
+      }
+
+      requestAnimationFrame(update);
+    }
+
     return () => {
-      window.clearInterval(interval);
+      setIsSpeaking(false);
     };
-  }, []);
+  }, [source]);
 
-  return counter;
+  return isSpeaking;
+}
+
+type UseIsAudioActive = {
+  source: MediaStream | null;
+  fftSize?: FftSize;
 };
+
+type FftSize =
+  | 32
+  | 64
+  | 128
+  | 256
+  | 512
+  | 1024
+  | 2048
+  | 4096
+  | 8192
+  | 16384
+  | 32768;
