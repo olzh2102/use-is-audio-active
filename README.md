@@ -17,8 +17,6 @@ import * as React from 'react'
 
 import useIsAudioActive from 'use-is-audio-active'
 
-
-
 const Example = () => {
   const [stream, setStream] = React.useState(null)
   const isActive = useIsAudioActive({ source: stream });
